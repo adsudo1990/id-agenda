@@ -44,6 +44,8 @@
     font-size:11px; text-transform:uppercase; letter-spacing:.12em;
     color:var(--accent-deep); font-weight:600; margin-bottom:4px; display:block;
   }
+  .logowrap{ display:flex; align-items:center; gap:16px; }
+  .logoimg{ height:42px; width:auto; display:block; flex-shrink:0; }
   .edition{
     display:flex; align-items:center; gap:10px; font-family:'IBM Plex Mono',monospace;
   }
@@ -220,6 +222,8 @@
     .masthead{padding-top:20px; padding-bottom:14px; gap:10px;}
     .masthead h1{font-size:26px;}
     .masthead .kicker{font-size:10px;}
+    .logowrap{gap:10px;}
+    .logoimg{height:32px;}
     .edition{gap:8px; flex-wrap:wrap;}
     .edition select{font-size:14px; padding:6px 8px;}
 
@@ -278,6 +282,7 @@
     .masthead h1{font-size:22px;}
     .masthead{flex-direction:column; align-items:flex-start;}
     .edition{width:100%; justify-content:space-between;}
+    .logoimg{height:28px;}
 
     .form-row > *{min-width:100%;}
 
@@ -292,9 +297,12 @@
 <body>
 
 <div class="masthead">
-  <div>
-    <span class="kicker">Estudio de contenido · panel de equipo</span>
-    <h1 class="display">Mesa de Contenido</h1>
+  <div class="logowrap">
+    <img class="logoimg" alt="Icon Digital" src="logo.png">
+    <div>
+      <span class="kicker">Estudio de contenido · panel de equipo</span>
+      <h1 class="display">Mesa de Contenido</h1>
+    </div>
   </div>
   <div class="edition">
     <div>

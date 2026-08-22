@@ -69,13 +69,14 @@
   /* ---------- tabs ---------- */
   .tabs{
     display:flex; gap:4px; padding:18px 40px 0; border-bottom:2px solid var(--accent);
-    background:var(--accent-tint);
+    background:var(--accent-tint); overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
   }
   .tab{
     font-family:'Fraunces',serif; font-size:15px; font-weight:600; cursor:pointer;
     padding:10px 18px; border:1px solid transparent; border-bottom:none;
     border-radius:6px 6px 0 0; background:transparent; color:var(--accent-deep);
-    opacity:.65; transform:translateY(2px);
+    opacity:.65; transform:translateY(2px); flex-shrink:0; white-space:nowrap;
   }
   .tab:hover{ opacity:1; }
   .tab.active{ background:var(--card); color:var(--accent-deep); border-color:var(--accent); opacity:1; box-shadow:var(--shadow); }
@@ -204,10 +205,87 @@
   .modal-field select, .modal-field input{width:100%;}
   .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:8px;}
 
-  @media (max-width:640px){
-    .masthead, .ticker, .tabs, main{padding-left:18px; padding-right:18px;}
+  /* ---------- calendario: touch drag ghost ---------- */
+  .cal-piece.dragging-source{ opacity:.35; }
+  .cal-piece-ghost{
+    position:fixed; z-index:200; pointer-events:none; opacity:.95;
+    box-shadow:0 10px 24px rgba(36,28,30,.3); transform:scale(1.04);
+    border-radius:4px;
+  }
+  .d-short{display:none;}
+
+  /* ==================== RESPONSIVE ==================== */
+  @media (max-width:768px){
+    .masthead, .ticker, .tabs, main, footer{padding-left:18px; padding-right:18px;}
+    .masthead{padding-top:20px; padding-bottom:14px; gap:10px;}
     .masthead h1{font-size:26px;}
-    .cal-cell{min-height:64px;}
+    .masthead .kicker{font-size:10px;}
+    .edition{gap:8px; flex-wrap:wrap;}
+    .edition select{font-size:14px; padding:6px 8px;}
+
+    .tick{padding:12px 16px; min-width:118px;}
+    .tick .num{font-size:22px;}
+
+    main{padding-top:20px; padding-bottom:40px;}
+    .panel-head{gap:8px;}
+    .panel-head h2{font-size:19px;}
+
+    .form-row{padding:12px; gap:8px;}
+    .form-row input, .form-row select{min-width:45%;}
+
+    /* los inputs/selects a 16px evitan el zoom automático de iOS al tocarlos */
+    select, input[type=text], input[type=date]{font-size:16px;}
+
+    /* tablas -> tarjetas apiladas */
+    table, thead, tbody, tr, td{display:block; width:100%;}
+    thead{display:none;}
+    table{border:none;}
+    tbody tr{
+      position:relative; background:var(--card); border-radius:10px; box-shadow:var(--shadow);
+      margin-bottom:10px; padding:14px 16px; border-bottom:none;
+    }
+    tr:nth-child(even) td{background:transparent;}
+    tbody td{border:none; padding:6px 0;}
+    tbody td::before{
+      content:attr(data-label); display:block; font-size:10px; text-transform:uppercase;
+      letter-spacing:.06em; color:var(--accent-deep); font-weight:700; margin-bottom:3px;
+    }
+    tbody tr td:first-child{
+      font-family:'Fraunces',serif; font-weight:600; font-size:15.5px; padding-bottom:10px;
+      margin-bottom:6px; border-bottom:1px solid var(--line); padding-right:26px;
+    }
+    tbody tr td:first-child::before{content:none;}
+    tbody td input, tbody td select{width:100%;}
+    .cliente-row td:last-child{position:absolute; top:12px; right:12px; padding:0; width:auto;}
+
+    /* calendario: nombres de día abreviados y celdas más compactas */
+    .d-full{display:none;}
+    .d-short{display:inline;}
+    .cal-head div{font-size:10px; padding:5px 0;}
+    .cal-grid, .cal-head{gap:4px;}
+    .cal-cell{min-height:68px; padding:4px;}
+    .cal-daynum{font-size:11px;}
+    .cal-piece{font-size:9.5px; padding:2px 16px 2px 5px;}
+
+    /* que arrastrar una tarjeta del calendario no dispare el scroll de la página */
+    .cal-piece{touch-action:none;}
+
+    .modal-actions{flex-direction:column;}
+    .modal-actions button{width:100%;}
+  }
+
+  @media (max-width:480px){
+    .masthead h1{font-size:22px;}
+    .masthead{flex-direction:column; align-items:flex-start;}
+    .edition{width:100%; justify-content:space-between;}
+
+    .form-row > *{min-width:100%;}
+
+    .cal-cell{min-height:56px;}
+    .cal-piece{font-size:9px;}
+    .cal-legend{gap:8px 10px; font-size:10px;}
+
+    .editor-total{flex-direction:column; align-items:flex-start; gap:10px;}
   }
 </style>
 </head>
@@ -462,15 +540,15 @@ function renderClientes(){
   const tbody = document.getElementById("tblClientes");
   tbody.innerHTML = DB.clientes.map((c,i)=>`
     <tr class="cliente-row">
-      <td>${c.nombre}</td>
-      <td>
+      <td data-label="Cliente">${c.nombre}</td>
+      <td data-label="Editor">
         <select class="editor" onchange="setEditor(${i},this.value)">
           <option value="" ${!c.editor?"selected":""}>—</option>
           ${EDITORES.map(ed=>`<option ${ed===c.editor?"selected":""}>${ed}</option>`).join("")}
         </select>
       </td>
-      <td><input type="text" value="${c.material||""}" onchange="setCampo(${i},'material',this.value)" placeholder="—"></td>
-      <td><input type="text" value="${c.comentarios||""}" onchange="setCampo(${i},'comentarios',this.value)" placeholder="—"></td>
+      <td data-label="Material necesario"><input type="text" value="${c.material||""}" onchange="setCampo(${i},'material',this.value)" placeholder="—"></td>
+      <td data-label="Comentarios"><input type="text" value="${c.comentarios||""}" onchange="setCampo(${i},'comentarios',this.value)" placeholder="—"></td>
       <td><button class="small-del" onclick="borrarCliente(${i})" title="Eliminar cliente">✕</button></td>
     </tr>`).join("");
 }
@@ -530,6 +608,7 @@ function formatoFecha(iso){
 /* ---------------- editar pieza (modal, también usado por el calendario) --- */
 let editandoIdx = null;
 function abrirEditar(i){
+  if(suprimirClickCalendario){ suprimirClickCalendario = false; return; } // tap final de un arrastre táctil, no abrir
   editandoIdx = i;
   const p = DB.piezas[i];
   document.getElementById("eCliente").innerHTML = DB.clientes.map(c=>`<option ${c.nombre===p.cliente?"selected":""}>${c.nombre}</option>`).join("");
@@ -576,7 +655,8 @@ function renderCalendario(){
   const hoy = hoyISO();
 
   const diasSemana = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-  let html = `<div class="cal-head">${diasSemana.map(d=>`<div>${d}</div>`).join("")}</div><div class="cal-grid">`;
+  const diasSemanaCorto = ["Lu","Ma","Mi","Ju","Vi","Sá","Do"];
+  let html = `<div class="cal-head">${diasSemana.map((d,i)=>`<div><span class="d-full">${d}</span><span class="d-short">${diasSemanaCorto[i]}</span></div>`).join("")}</div><div class="cal-grid">`;
 
   for(let i=0;i<inicioSemana;i++) html += `<div class="cal-cell empty"></div>`;
 
@@ -590,7 +670,7 @@ function renderCalendario(){
                  ondragover="permitirDrop(event)" ondragleave="quitarDragover(event)" ondrop="soltarPieza(event)">
       <div class="cal-daynum">${d}</div>
       ${piezasDia.map(p=>`
-        <div class="cal-piece" draggable="true" title="${p.cliente} · ${p.tipo} · click para editar"
+        <div class="cal-piece" draggable="true" data-idx="${p._i}" title="${p.cliente} · ${p.tipo} · tocá para editar, mantené presionado para mover"
              ondragstart="arrastrarPieza(event,${p._i})" onclick="abrirEditar(${p._i})"
              style="border-left-color:${colorEditor(editorDeCliente(p.cliente))}">${p.cliente}</div>
       `).join("")}
@@ -620,6 +700,99 @@ function soltarPieza(ev){
   DB.piezas[arrastrandoIdx].fecha = nuevaFecha;
   arrastrandoIdx = null;
   guardar(); renderAll();
+}
+
+/* ---------------- Calendario: arrastre táctil (celular) -------------------
+   El drag & drop nativo de HTML5 (arriba) no dispara con touch en mobile,
+   así que para dedos usamos Pointer Events en paralelo: se activa solo
+   cuando ev.pointerType === "touch", dejando el mouse intacto. ------------ */
+let touchDrag = null; // {idx, pointerId, originEl, ghostEl, offsetX, offsetY, dragging, lastCell}
+const TOUCH_DRAG_UMBRAL = 10;
+let suprimirClickCalendario = false;
+
+function initDragTactil(){
+  const cont = document.getElementById("calendarioGrid");
+  cont.addEventListener("pointerdown", onPiezaPointerDown);
+  cont.addEventListener("click", ev=>{
+    if(suprimirClickCalendario){
+      suprimirClickCalendario = false;
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  }, true);
+}
+
+function celdaEnPunto(x, y){
+  const el = document.elementFromPoint(x, y);
+  return el ? el.closest(".cal-cell[data-fecha]") : null;
+}
+
+function onPiezaPointerDown(ev){
+  if(ev.pointerType !== "touch") return;
+  const pieza = ev.target.closest(".cal-piece");
+  if(!pieza) return;
+  touchDrag = {
+    idx: Number(pieza.dataset.idx), pointerId: ev.pointerId, originEl: pieza,
+    startX: ev.clientX, startY: ev.clientY, dragging: false, ghostEl: null, lastCell: null,
+  };
+  document.addEventListener("pointermove", onPiezaPointerMove);
+  document.addEventListener("pointerup", onPiezaPointerUp);
+  document.addEventListener("pointercancel", onPiezaPointerUp);
+}
+
+function onPiezaPointerMove(ev){
+  if(!touchDrag || ev.pointerId !== touchDrag.pointerId) return;
+  const dx = ev.clientX - touchDrag.startX;
+  const dy = ev.clientY - touchDrag.startY;
+  if(!touchDrag.dragging){
+    if(Math.abs(dx) < TOUCH_DRAG_UMBRAL && Math.abs(dy) < TOUCH_DRAG_UMBRAL) return;
+    touchDrag.dragging = true;
+    crearGhost(touchDrag, ev);
+  }
+  ev.preventDefault();
+  posicionarGhost(touchDrag, ev.clientX, ev.clientY);
+  const celda = celdaEnPunto(ev.clientX, ev.clientY);
+  if(touchDrag.lastCell && touchDrag.lastCell !== celda) touchDrag.lastCell.classList.remove("dragover");
+  if(celda) celda.classList.add("dragover");
+  touchDrag.lastCell = celda;
+}
+
+function crearGhost(state, ev){
+  const rect = state.originEl.getBoundingClientRect();
+  const ghost = state.originEl.cloneNode(true);
+  ghost.classList.add("cal-piece-ghost");
+  ghost.style.width = rect.width + "px";
+  document.body.appendChild(ghost);
+  state.ghostEl = ghost;
+  state.offsetX = ev.clientX - rect.left;
+  state.offsetY = ev.clientY - rect.top;
+  posicionarGhost(state, ev.clientX, ev.clientY);
+  state.originEl.classList.add("dragging-source");
+}
+
+function posicionarGhost(state, x, y){
+  state.ghostEl.style.left = (x - state.offsetX) + "px";
+  state.ghostEl.style.top = (y - state.offsetY) + "px";
+}
+
+function onPiezaPointerUp(ev){
+  if(!touchDrag || ev.pointerId !== touchDrag.pointerId) return;
+  document.removeEventListener("pointermove", onPiezaPointerMove);
+  document.removeEventListener("pointerup", onPiezaPointerUp);
+  document.removeEventListener("pointercancel", onPiezaPointerUp);
+
+  if(touchDrag.dragging){
+    suprimirClickCalendario = true; // evita que el tap final abra el modal de editar
+    if(touchDrag.lastCell) touchDrag.lastCell.classList.remove("dragover");
+    if(touchDrag.ghostEl) touchDrag.ghostEl.remove();
+    touchDrag.originEl.classList.remove("dragging-source");
+    const celda = celdaEnPunto(ev.clientX, ev.clientY);
+    if(celda){
+      DB.piezas[touchDrag.idx].fecha = celda.dataset.fecha;
+      guardar(); renderAll();
+    }
+  }
+  touchDrag = null;
 }
 
 /* ---------------- Ticker (KPIs) ---------------- */
@@ -669,7 +842,12 @@ function renderPanelEditor(editor){
     <table>
       <thead><tr><th>Cuenta / Cliente</th><th>Piezas del mes</th><th>Fecha de entrega</th><th>Piezas realizadas</th></tr></thead>
       <tbody>
-        ${filas.map(f=>`<tr><td>${f.nombre}</td><td class="mono">${f.mes}</td><td class="mono">${f.fecha}</td><td class="mono">${f.publicadas}</td></tr>`).join("")}
+        ${filas.map(f=>`<tr>
+          <td data-label="Cuenta / Cliente">${f.nombre}</td>
+          <td class="mono" data-label="Piezas del mes">${f.mes}</td>
+          <td class="mono" data-label="Fecha de entrega">${f.fecha}</td>
+          <td class="mono" data-label="Piezas realizadas">${f.publicadas}</td>
+        </tr>`).join("")}
       </tbody>
     </table>`}
   `;
@@ -709,6 +887,7 @@ function renderAll(){
 (async function iniciar(){
   DB = await cargar();
   initSelectores();
+  initDragTactil();
   renderAll();
 })();
 </script>

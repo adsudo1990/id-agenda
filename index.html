@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesa de Contenido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #FBF6F2;
+    --card: #FFFFFF;
+    --ink: #241C1E;
+    --ink-soft: #8A7B76;
+    --ink-mute: #BBAFA9;
+    --accent: #E24C7C;
+    --accent-deep: #9C2F56;
+    --accent-tint: #FCE8EF;
+    --sage: #6E9C82;
+    --sage-tint: #E7F1EB;
+    --amber: #D99A44;
+    --amber-tint: #FBF0E1;
+    --line: #EEE2DC;
+    --shadow: 0 1px 2px rgba(36,28,30,0.04), 0 8px 24px rgba(36,28,30,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Inter',sans-serif; font-size:14px; line-height:1.5;
+  }
+  .display{font-family:'Fraunces',serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:28px 40px 18px; border-bottom:3px solid var(--ink);
+    flex-wrap:wrap; gap:14px;
+  }
+  .masthead h1{
+    font-size:34px; font-weight:600; margin:0; letter-spacing:-0.01em;
+  }
+  .masthead .kicker{
+    font-size:11px; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--accent-deep); font-weight:600; margin-bottom:4px; display:block;
+  }
+  .edition{
+    display:flex; align-items:center; gap:10px; font-family:'IBM Plex Mono',monospace;
+  }
+  .edition label{font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-soft); display:block; margin-bottom:3px;}
+  .edition select{
+    font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:500;
+    border:1.5px solid var(--ink); background:var(--card); padding:6px 10px;
+    border-radius:2px; color:var(--ink);
+  }
+
+  /* ---------- ticker ---------- */
+  .ticker{
+    display:flex; gap:0; padding:0 40px; border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tick{
+    padding:16px 26px; border-right:1px solid var(--line); min-width:130px;
+  }
+  .tick:first-child{padding-left:0;}
+  .tick .num{font-family:'Fraunces',serif; font-size:28px; font-weight:600; display:block;}
+  .tick .lbl{font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em;}
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex; gap:4px; padding:18px 40px 0; border-bottom:2px solid var(--accent);
+    background:var(--accent-tint);
+  }
+  .tab{
+    font-family:'Fraunces',serif; font-size:15px; font-weight:600; cursor:pointer;
+    padding:10px 18px; border:1px solid transparent; border-bottom:none;
+    border-radius:6px 6px 0 0; background:transparent; color:var(--accent-deep);
+    opacity:.65; transform:translateY(2px);
+  }
+  .tab:hover{ opacity:1; }
+  .tab.active{ background:var(--card); color:var(--accent-deep); border-color:var(--accent); opacity:1; box-shadow:var(--shadow); }
+
+  main{padding:28px 40px 60px; max-width:1180px; margin:0 auto;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .panel-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; gap:12px; flex-wrap:wrap;}
+  .panel-head h2{font-size:22px; margin:0;}
+  .panel-head p{margin:4px 0 0; color:var(--ink-soft); font-size:13px; max-width:520px;}
+
+  button.primary{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px; cursor:pointer;
+    background:var(--accent); color:#fff; border:none; padding:10px 18px; border-radius:6px;
+    box-shadow:var(--shadow);
+  }
+  button.primary:hover{background:var(--accent-deep);}
+  button.ghost{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:12px; cursor:pointer;
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); padding:7px 12px; border-radius:6px;
+  }
+  button.ghost:hover{border-color:var(--ink-soft); color:var(--ink);}
+
+  /* ---------- ficha (card) grid for Programación ---------- */
+  .fichas{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
+  .ficha{
+    background:var(--card); border-radius:10px; box-shadow:var(--shadow);
+    padding:14px 16px; position:relative; border-left:5px solid var(--ink-mute);
+  }
+  .ficha.st-pendiente{border-left-color:var(--amber);}
+  .ficha.st-endiseno{border-left-color:var(--accent);}
+  .ficha.st-aprobado{border-left-color:var(--sage);}
+  .ficha.st-publicado{border-left-color:var(--ink-soft);}
+  .ficha .cliente{font-family:'Fraunces',serif; font-weight:600; font-size:15px; margin-bottom:2px;}
+  .ficha .meta{font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;}
+  .ficha .estado{
+    display:inline-block; margin-top:8px; font-size:10px; text-transform:uppercase;
+    letter-spacing:.06em; font-weight:600; padding:3px 8px; border-radius:20px;
+  }
+  .ficha.st-pendiente .estado{background:var(--amber-tint); color:#8a5a1c;}
+  .ficha.st-endiseno .estado{background:var(--accent-tint); color:var(--accent-deep);}
+  .ficha.st-aprobado .estado{background:var(--sage-tint); color:#2f5c43;}
+  .ficha.st-publicado .estado{background:#EEE; color:#555;}
+  .ficha .del{position:absolute; top:10px; right:10px; cursor:pointer; color:var(--ink-mute); font-size:13px; background:none; border:none;}
+  .ficha .del:hover{color:var(--accent-deep);}
+
+  /* ---------- tables ---------- */
+  table{width:100%; border-collapse:collapse;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--accent-deep); font-weight:700; padding:8px 10px; border-bottom:2px solid var(--ink);
+  }
+  td{padding:9px 10px; border-bottom:1px solid var(--line); font-size:13.5px;}
+  tr:nth-child(even) td{background:#FDFAF8;}
+  select, input[type=text], input[type=date]{
+    font-family:'Inter',sans-serif; font-size:13px; padding:6px 8px; border:1px solid var(--line);
+    border-radius:5px; background:var(--card); color:var(--ink);
+  }
+  .cliente-row select.editor{min-width:100px;}
+  .small-del{cursor:pointer; color:var(--ink-mute); background:none; border:none; font-size:13px;}
+  .small-del:hover{color:var(--accent-deep);}
+
+  /* ---------- form row ---------- */
+  .form-row{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:var(--card);
+    padding:14px; border-radius:8px; box-shadow:var(--shadow); margin-bottom:18px;
+  }
+  .form-row input, .form-row select{flex:1; min-width:120px;}
+
+  /* ---------- editor summary cards ---------- */
+  .editor-total{
+    background:var(--accent-deep); color:#fff; border-radius:10px; padding:18px 22px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;
+    box-shadow:var(--shadow);
+  }
+  .editor-total .big{font-family:'Fraunces',serif; font-size:30px; font-weight:600;}
+  .editor-total .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.08em; opacity:.85;}
+
+  footer{padding:20px 40px; color:var(--ink-mute); font-size:11px; text-align:center;}
+  .empty{padding:30px; text-align:center; color:var(--ink-mute); font-style:italic; border:1px dashed var(--line); border-radius:8px;}
+
+  /* ---------- calendario ---------- */
+  .cal-legend{display:flex; gap:14px; font-size:11px; color:var(--ink-soft); flex-wrap:wrap;}
+  .cal-legend i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+  .cal-head{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px;}
+  .cal-head div{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:#fff; font-weight:600;
+    background:var(--ink); text-align:center; padding:6px 0; border-radius:4px;
+  }
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-cell{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; min-height:96px;
+    padding:6px; display:flex; flex-direction:column; gap:4px;
+  }
+  .cal-cell.empty{background:transparent; border:none;}
+  .cal-cell.today{border:2px solid var(--accent); background:var(--accent-tint);}
+  .cal-cell.dragover{border-color:var(--accent-deep); box-shadow:inset 0 0 0 2px var(--accent-deep);}
+  .cal-daynum{font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500; color:var(--ink-soft);}
+  .cal-piece{
+    font-size:10.5px; padding:3px 20px 3px 6px; border-radius:4px; border-left:3px solid var(--ink-mute);
+    background:var(--paper); cursor:grab; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    position:relative;
+  }
+  .cal-piece:active{cursor:grabbing;}
+  .cal-piece::after{
+    content:"✎"; position:absolute; right:5px; top:50%; transform:translateY(-50%);
+    font-size:10px; color:var(--accent-deep); opacity:0; transition:opacity .12s;
+  }
+  .cal-piece:hover::after{ opacity:1; }
+  .cal-piece:hover{ background:var(--accent-tint); }
+
+  /* ---------- modal de edición ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(36,28,30,.45);
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--card); border-radius:12px; padding:24px; width:100%; max-width:380px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+  }
+  .modal h3{margin:0 0 16px;}
+  .modal-field{margin-bottom:12px; display:flex; flex-direction:column; gap:4px;}
+  .modal-field label{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
+  .modal-field select, .modal-field input{width:100%;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:8px;}
+
+  @media (max-width:640px){
+    .masthead, .ticker, .tabs, main{padding-left:18px; padding-right:18px;}
+    .masthead h1{font-size:26px;}
+    .cal-cell{min-height:64px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div>
+    <span class="kicker">Estudio de contenido · panel de equipo</span>
+    <h1 class="display">Mesa de Contenido</h1>
+  </div>
+  <div class="edition">
+    <div>
+      <label>Mes</label>
+      <select id="selMes"></select>
+    </div>
+    <div>
+      <label>Año</label>
+      <select id="selAnio"></select>
+    </div>
+    <button class="ghost" style="align-self:flex-end;" onclick="volverAHoy()">Hoy</button>
+  </div>
+</div>
+
+<div class="ticker" id="ticker"></div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-tab="clientes">Clientes</button>
+  <button class="tab" data-tab="programacion">Programación</button>
+  <button class="tab" data-tab="calendario">Calendario</button>
+  <button class="tab" data-tab="Lali">Lali</button>
+  <button class="tab" data-tab="Matías">Matías</button>
+  <button class="tab" data-tab="Sergio">Sergio</button>
+</div>
+
+<main>
+
+  <section class="panel active" id="panel-clientes">
+    <div class="panel-head">
+      <div>
+        <h2 class="display">Clientes</h2>
+        <p>Una fila por cuenta. El editor asignado acá define qué aparece en cada pestaña de editor.</p>
+      </div>
+    </div>
+    <div class="form-row">
+      <input type="text" id="nuevoCliente" placeholder="Nombre del cliente nuevo">
+      <select id="nuevoEditor">
+        <option value="">Sin asignar</option>
+        <option>Lali</option><option>Matías</option><option>Sergio</option>
+      </select>
+      <button class="primary" onclick="agregarCliente()">+ Agregar cliente</button>
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Editor</th><th>Material necesario</th><th>Comentarios</th><th></th></tr></thead>
+      <tbody id="tblClientes"></tbody>
+    </table>
+  </section>
+
+  <section class="panel" id="panel-programacion">
+    <div class="panel-head">
+      <div>
+        <h2 class="display">Programación</h2>
+        <p>Cada ficha es una pieza. El color del borde muestra el estado. Tocá ✎ para editar cualquier dato, incluida la fecha.</p>
+      </div>
+    </div>
+    <div class="form-row">
+      <select id="pCliente"></select>
+      <input type="date" id="pFecha">
+      <select id="pTipo">
+        <option>Reel</option><option>Carrusel</option><option>Post</option><option>Historia</option><option>Video</option>
+      </select>
+      <select id="pEstado">
+        <option>Pendiente</option><option>En diseño</option><option>Aprobado</option><option>Publicado</option>
+      </select>
+      <input type="text" id="pDesc" placeholder="Descripción / copy">
+      <button class="primary" onclick="agregarPieza()">+ Agregar pieza</button>
+    </div>
+    <div class="fichas" id="fichasProgramacion"></div>
+  </section>
+
+  <section class="panel" id="panel-calendario">
+    <div class="panel-head">
+      <div>
+        <h2 class="display">Calendario</h2>
+        <p>Quién tiene qué entrega cada día. Mantené apretada una tarjeta y soltala en otro día para reprogramarla.</p>
+      </div>
+      <div class="cal-legend">
+        <span><i style="background:var(--amber)"></i>Lali</span>
+        <span><i style="background:#5b8fa8"></i>Matías</span>
+        <span><i style="background:var(--accent-deep)"></i>Sergio</span>
+        <span><i style="background:var(--ink-mute)"></i>Sin asignar</span>
+      </div>
+    </div>
+    <div id="calendarioGrid"></div>
+  </section>
+
+  <section class="panel" id="panel-editor-Lali"></section>
+  <section class="panel" id="panel-editor-Matías"></section>
+  <section class="panel" id="panel-editor-Sergio"></section>
+
+</main>
+
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <h3 class="display">Editar pieza</h3>
+    <div class="modal-field"><label>Cliente</label><select id="eCliente"></select></div>
+    <div class="modal-field"><label>Fecha</label><input type="date" id="eFecha"></div>
+    <div class="modal-field"><label>Tipo de pieza</label>
+      <select id="eTipo"><option>Reel</option><option>Carrusel</option><option>Post</option><option>Historia</option><option>Video</option></select>
+    </div>
+    <div class="modal-field"><label>Estado</label>
+      <select id="eEstado"><option>Pendiente</option><option>En diseño</option><option>Aprobado</option><option>Publicado</option></select>
+    </div>
+    <div class="modal-field"><label>Descripción / copy</label><input type="text" id="eDesc"></div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="primary" onclick="guardarEdicion()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Mesa de Contenido — <span id="syncStatus" class="mono">conectando…</span>
+  &nbsp;·&nbsp; <button class="ghost" onclick="exportarJSON()">Exportar copia (.json)</button>
+  <button class="ghost" onclick="document.getElementById('importFile').click()">Importar copia</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarJSON(event)">
+</footer>
+
+<script>
+/* ---------------- datos base ---------------- */
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const EDITORES = ["Lali","Matías","Sergio"];
+const TIPOS = ["Reel","Carrusel","Post","Historia","Video"];
+
+const CLIENTES_INICIALES = [
+  ["Manna Cafetería","Lali"],["Confía Cafetería","Lali"],["Antelos Golosinas","Lali"],
+  ["Sunflowers Spa","Lali"],["Tía Pote","Lali"],["Patagonia Flooring","Lali"],
+  ["The Wolf of Bond Street","Sergio"],["Corazón de Cuero","Lali"],["Por un mate","Lali"],
+  ["Fixed","Lali"],["Deacon","Matías"],["Celcius","Matías"],["La Farola Cabildo","Matías"],
+  ["La Farola Scalabrini","Matías"],["La Farola San Justo","Matías"],["Burguer Place","Matías"],
+  ["Desconecta2","Lali"],["Play Kawaii","Lali"],["Celu Play","Sergio"],["SOMOS DIFERENTES","Matías"],
+  ["Ginitos","Lali"],["Espacio de Cocina","Lali"],["Mr Jaz Collection","Lali"],["Rauch","Matías"],
+  ["BAULOK",""],["ETEREO EVENTOS",""],["Kata eventos",""],["La parada fiambrera",""],["Mariela",""]
+];
+
+function estadoClass(estado){
+  const map = {"Pendiente":"pendiente","En diseño":"endiseno","Aprobado":"aprobado","Publicado":"publicado"};
+  return "st-" + (map[estado] || "publicado");
+}
+
+/* ---------------- storage: Cloudflare Worker (KV) + respaldo local ---------------- */
+const KEY = "mesa_contenido_v1";
+
+// completá esto después de desplegar el Worker (paso a paso más abajo):
+const API_URL = "https://mesa-contenido.sergio-visgarra.workers.dev"; // URL del Worker
+const AUTH_TOKEN = "bflTw_yeL56TSywBPRxTNg9T4o6L3ExN";                // igual que en worker.js
+
+function estadoInicial(){
+  return {
+    clientes: CLIENTES_INICIALES.map(([nombre,editor])=>({nombre,editor,material:"",comentarios:""})),
+    piezas: [],
+  };
+}
+
+async function cargar(){
+  try{
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const remoto = await res.json();
+    if(remoto){
+      localStorage.setItem(KEY, JSON.stringify(remoto));
+      setEstadoSync("sincronizado ✓");
+      return remoto;
+    }
+  }catch(e){
+    console.warn("Sin conexión al servidor compartido, usando la copia de este navegador.", e);
+    setEstadoSync("sin conexión — mostrando copia local");
+  }
+  const raw = localStorage.getItem(KEY);
+  return raw ? JSON.parse(raw) : estadoInicial();
+}
+
+let guardando = false, pendiente = false;
+async function guardar(){
+  localStorage.setItem(KEY, JSON.stringify(DB));
+  if(guardando){ pendiente = true; return; }
+  guardando = true;
+  setEstadoSync("guardando…");
+  try{
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Auth": AUTH_TOKEN },
+      body: JSON.stringify(DB),
+    });
+    setEstadoSync("sincronizado ✓");
+  }catch(e){
+    setEstadoSync("sin conexión — guardado solo en este navegador");
+  }finally{
+    guardando = false;
+    if(pendiente){ pendiente = false; guardar(); }
+  }
+}
+function setEstadoSync(texto){
+  const el = document.getElementById("syncStatus");
+  if(el) el.textContent = texto;
+}
+
+let DB = null;
+
+/* ---------------- mes/año: local por navegador, NO se sincroniza -----------
+   así cada persona puede mirar otro mes sin cambiárselo a las demás; al abrir
+   la página siempre arranca en el mes real de hoy. ------------------------- */
+let mesActual = MESES[new Date().getMonth()];
+let anioActual = new Date().getFullYear();
+function volverAHoy(){
+  mesActual = MESES[new Date().getMonth()];
+  anioActual = new Date().getFullYear();
+  initSelectores(); renderAll();
+}
+
+/* ---------------- helpers de fecha ---------------- */
+function mesIndex(nombre){ return MESES.indexOf(nombre); }
+function enMesSeleccionado(fechaStr){
+  if(!fechaStr) return false;
+  const d = new Date(fechaStr+"T00:00:00");
+  return d.getMonth()===mesIndex(mesActual) && d.getFullYear()===Number(anioActual);
+}
+function hoyISO(){ return new Date().toISOString().slice(0,10); }
+
+/* ---------------- render: selects de mes/año ---------------- */
+function initSelectores(){
+  const selMes = document.getElementById("selMes");
+  const selAnio = document.getElementById("selAnio");
+  selMes.innerHTML = MESES.map(m=>`<option ${m===mesActual?"selected":""}>${m}</option>`).join("");
+  const anios = [2025,2026,2027];
+  selAnio.innerHTML = anios.map(a=>`<option ${a===anioActual?"selected":""}>${a}</option>`).join("");
+  selMes.onchange = ()=>{ mesActual = selMes.value; renderAll(); };
+  selAnio.onchange = ()=>{ anioActual = Number(selAnio.value); renderAll(); };
+}
+
+/* ---------------- tabs ---------------- */
+document.getElementById("tabs").addEventListener("click", e=>{
+  if(!e.target.classList.contains("tab")) return;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  e.target.classList.add("active");
+  const key = e.target.dataset.tab;
+  const id = EDITORES.includes(key) ? `panel-editor-${key}` : `panel-${key}`;
+  document.getElementById(id).classList.add("active");
+});
+
+/* ---------------- Clientes ---------------- */
+function renderClientes(){
+  const tbody = document.getElementById("tblClientes");
+  tbody.innerHTML = DB.clientes.map((c,i)=>`
+    <tr class="cliente-row">
+      <td>${c.nombre}</td>
+      <td>
+        <select class="editor" onchange="setEditor(${i},this.value)">
+          <option value="" ${!c.editor?"selected":""}>—</option>
+          ${EDITORES.map(ed=>`<option ${ed===c.editor?"selected":""}>${ed}</option>`).join("")}
+        </select>
+      </td>
+      <td><input type="text" value="${c.material||""}" onchange="setCampo(${i},'material',this.value)" placeholder="—"></td>
+      <td><input type="text" value="${c.comentarios||""}" onchange="setCampo(${i},'comentarios',this.value)" placeholder="—"></td>
+      <td><button class="small-del" onclick="borrarCliente(${i})" title="Eliminar cliente">✕</button></td>
+    </tr>`).join("");
+}
+function setEditor(i,val){ DB.clientes[i].editor = val; guardar(); renderAll(); }
+function setCampo(i,campo,val){ DB.clientes[i][campo] = val; guardar(); }
+function borrarCliente(i){
+  if(!confirm(`¿Eliminar "${DB.clientes[i].nombre}"? Esto no borra sus piezas en Programación.`)) return;
+  DB.clientes.splice(i,1); guardar(); renderAll();
+}
+function agregarCliente(){
+  const nombre = document.getElementById("nuevoCliente").value.trim();
+  if(!nombre) return;
+  const editor = document.getElementById("nuevoEditor").value;
+  DB.clientes.push({nombre, editor, material:"", comentarios:""});
+  document.getElementById("nuevoCliente").value = "";
+  guardar(); renderAll();
+}
+
+/* ---------------- Programación ---------------- */
+function renderSelectCliente(){
+  const sel = document.getElementById("pCliente");
+  sel.innerHTML = DB.clientes.map(c=>`<option>${c.nombre}</option>`).join("");
+}
+function agregarPieza(){
+  const cliente = document.getElementById("pCliente").value;
+  const fecha = document.getElementById("pFecha").value;
+  const tipo = document.getElementById("pTipo").value;
+  const estado = document.getElementById("pEstado").value;
+  const desc = document.getElementById("pDesc").value.trim();
+  if(!cliente) return;
+  DB.piezas.push({cliente,fecha,tipo,estado,desc});
+  document.getElementById("pDesc").value = "";
+  guardar(); renderAll();
+}
+function borrarPieza(i){
+  DB.piezas.splice(i,1); guardar(); renderAll();
+}
+function renderFichas(){
+  const cont = document.getElementById("fichasProgramacion");
+  if(DB.piezas.length===0){ cont.innerHTML = `<div class="empty">Todavía no cargaste piezas. Agregá la primera arriba.</div>`; return; }
+  const ordenado = DB.piezas.map((p,i)=>({...p,_i:i})).sort((a,b)=>(a.fecha||"9999").localeCompare(b.fecha||"9999"));
+  cont.innerHTML = ordenado.map(p=>`
+    <div class="ficha ${estadoClass(p.estado)}">
+      <button class="del" onclick="borrarPieza(${p._i})" title="Eliminar" style="right:10px;">✕</button>
+      <button class="del" onclick="abrirEditar(${p._i})" title="Editar" style="right:30px;">✎</button>
+      <div class="cliente">${p.cliente}</div>
+      <div class="meta">${p.fecha ? formatoFecha(p.fecha) : "sin fecha"} · ${p.tipo}</div>
+      ${p.desc ? `<div class="meta" style="margin-top:4px;">${p.desc}</div>` : ""}
+      <span class="estado">${p.estado}</span>
+    </div>`).join("");
+}
+function formatoFecha(iso){
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+/* ---------------- editar pieza (modal, también usado por el calendario) --- */
+let editandoIdx = null;
+function abrirEditar(i){
+  editandoIdx = i;
+  const p = DB.piezas[i];
+  document.getElementById("eCliente").innerHTML = DB.clientes.map(c=>`<option ${c.nombre===p.cliente?"selected":""}>${c.nombre}</option>`).join("");
+  document.getElementById("eFecha").value = p.fecha || "";
+  document.getElementById("eTipo").value = p.tipo;
+  document.getElementById("eEstado").value = p.estado;
+  document.getElementById("eDesc").value = p.desc || "";
+  document.getElementById("modalEditar").classList.add("show");
+}
+function cerrarModal(){
+  document.getElementById("modalEditar").classList.remove("show");
+  editandoIdx = null;
+}
+function guardarEdicion(){
+  if(editandoIdx===null) return;
+  DB.piezas[editandoIdx] = {
+    cliente: document.getElementById("eCliente").value,
+    fecha: document.getElementById("eFecha").value,
+    tipo: document.getElementById("eTipo").value,
+    estado: document.getElementById("eEstado").value,
+    desc: document.getElementById("eDesc").value.trim(),
+  };
+  cerrarModal();
+  guardar(); renderAll();
+}
+
+/* ---------------- Calendario (con drag & drop) ---------------- */
+function editorDeCliente(nombreCliente){
+  const c = DB.clientes.find(c=>c.nombre===nombreCliente);
+  return c ? c.editor : "";
+}
+function colorEditor(editor){
+  if(editor==="Lali") return "var(--amber)";
+  if(editor==="Matías") return "#5b8fa8";
+  if(editor==="Sergio") return "var(--accent-deep)";
+  return "var(--ink-mute)";
+}
+function renderCalendario(){
+  const cont = document.getElementById("calendarioGrid");
+  const year = anioActual, month = mesIndex(mesActual);
+  const primerDia = new Date(year, month, 1);
+  const inicioSemana = (primerDia.getDay() + 6) % 7; // lunes = 0
+  const diasEnMes = new Date(year, month + 1, 0).getDate();
+  const hoy = hoyISO();
+
+  const diasSemana = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+  let html = `<div class="cal-head">${diasSemana.map(d=>`<div>${d}</div>`).join("")}</div><div class="cal-grid">`;
+
+  for(let i=0;i<inicioSemana;i++) html += `<div class="cal-cell empty"></div>`;
+
+  for(let d=1; d<=diasEnMes; d++){
+    const iso = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const piezasDia = DB.piezas
+      .map((p,i)=>({...p,_i:i}))
+      .filter(p=>p.fecha===iso);
+    const esHoy = iso===hoy;
+    html += `<div class="cal-cell${esHoy?" today":""}" data-fecha="${iso}"
+                 ondragover="permitirDrop(event)" ondragleave="quitarDragover(event)" ondrop="soltarPieza(event)">
+      <div class="cal-daynum">${d}</div>
+      ${piezasDia.map(p=>`
+        <div class="cal-piece" draggable="true" title="${p.cliente} · ${p.tipo} · click para editar"
+             ondragstart="arrastrarPieza(event,${p._i})" onclick="abrirEditar(${p._i})"
+             style="border-left-color:${colorEditor(editorDeCliente(p.cliente))}">${p.cliente}</div>
+      `).join("")}
+    </div>`;
+  }
+  html += `</div>`;
+  cont.innerHTML = html;
+}
+
+let arrastrandoIdx = null;
+function arrastrarPieza(ev, i){
+  arrastrandoIdx = i;
+  ev.dataTransfer.effectAllowed = "move";
+}
+function permitirDrop(ev){
+  ev.preventDefault();
+  ev.currentTarget.classList.add("dragover");
+}
+function quitarDragover(ev){
+  ev.currentTarget.classList.remove("dragover");
+}
+function soltarPieza(ev){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove("dragover");
+  const nuevaFecha = ev.currentTarget.dataset.fecha;
+  if(arrastrandoIdx===null || !nuevaFecha) return;
+  DB.piezas[arrastrandoIdx].fecha = nuevaFecha;
+  arrastrandoIdx = null;
+  guardar(); renderAll();
+}
+
+/* ---------------- Ticker (KPIs) ---------------- */
+function piezasDelMes(){ return DB.piezas.filter(p=>enMesSeleccionado(p.fecha)); }
+function totalEditor(editor){
+  const clientesEditor = DB.clientes.filter(c=>c.editor===editor).map(c=>c.nombre);
+  return piezasDelMes().filter(p=>clientesEditor.includes(p.cliente)).length;
+}
+function renderTicker(){
+  const pm = piezasDelMes().length;
+  const activas = DB.clientes.length;
+  const tick = document.getElementById("ticker");
+  tick.innerHTML = `
+    <div class="tick"><span class="num" style="color:var(--accent)">${pm}</span><span class="lbl">Piezas del mes</span></div>
+    <div class="tick"><span class="num" style="color:var(--sage)">${activas}</span><span class="lbl">Cuentas activas</span></div>
+    <div class="tick"><span class="num" style="color:var(--amber)">${totalEditor("Lali")}</span><span class="lbl">Piezas — Lali</span></div>
+    <div class="tick"><span class="num" style="color:#5b8fa8">${totalEditor("Matías")}</span><span class="lbl">Piezas — Matías</span></div>
+    <div class="tick"><span class="num" style="color:var(--accent-deep)">${totalEditor("Sergio")}</span><span class="lbl">Piezas — Sergio</span></div>
+  `;
+}
+
+/* ---------------- Paneles de editor ---------------- */
+function renderPanelEditor(editor){
+  const el = document.getElementById(`panel-editor-${editor}`);
+  const clientesEditor = DB.clientes.filter(c=>c.editor===editor);
+  const filas = clientesEditor.map(c=>{
+    const piezasMes = piezasDelMes().filter(p=>p.cliente===c.nombre);
+    const publicadasTotal = DB.piezas.filter(p=>p.cliente===c.nombre && p.estado==="Publicado").length;
+    const fechas = piezasMes.map(p=>p.fecha).filter(Boolean).sort();
+    const ultima = fechas.length ? formatoFecha(fechas[fechas.length-1]) : "—";
+    return {nombre:c.nombre, mes:piezasMes.length, fecha:ultima, publicadas:publicadasTotal};
+  });
+  const totalMes = filas.reduce((s,f)=>s+f.mes,0);
+  const totalRealizadas = filas.reduce((s,f)=>s+f.publicadas,0);
+  el.innerHTML = `
+    <div class="panel-head">
+      <div>
+        <h2 class="display">Cuentas a cargo de ${editor}</h2>
+        <p>Piezas y fecha de entrega del mes elegido arriba, más el histórico de piezas publicadas.</p>
+      </div>
+    </div>
+    <div class="editor-total">
+      <div><div class="lbl">Total del mes</div><div class="big">${totalMes}</div></div>
+      <div><div class="lbl">Total de piezas realizadas</div><div class="big">${totalRealizadas}</div></div>
+    </div>
+    ${filas.length===0 ? `<div class="empty">Todavía no hay cuentas asignadas a ${editor}. Asignalas en la pestaña Clientes.</div>` : `
+    <table>
+      <thead><tr><th>Cuenta / Cliente</th><th>Piezas del mes</th><th>Fecha de entrega</th><th>Piezas realizadas</th></tr></thead>
+      <tbody>
+        ${filas.map(f=>`<tr><td>${f.nombre}</td><td class="mono">${f.mes}</td><td class="mono">${f.fecha}</td><td class="mono">${f.publicadas}</td></tr>`).join("")}
+      </tbody>
+    </table>`}
+  `;
+}
+
+/* ---------------- export / import ---------------- */
+function exportarJSON(){
+  const blob = new Blob([JSON.stringify(DB,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `mesa-de-contenido-${mesActual}-${anioActual}.json`;
+  a.click();
+}
+function importarJSON(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      DB = JSON.parse(e.target.result);
+      guardar(); initSelectores(); renderAll();
+      alert("Datos importados correctamente.");
+    }catch(err){ alert("El archivo no es una copia válida."); }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------------- render all ---------------- */
+function renderAll(){
+  renderTicker();
+  renderClientes();
+  renderSelectCliente();
+  renderFichas();
+  renderCalendario();
+  EDITORES.forEach(renderPanelEditor);
+}
+(async function iniciar(){
+  DB = await cargar();
+  initSelectores();
+  renderAll();
+})();
+</script>
+</body>
+</html>

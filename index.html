@@ -248,6 +248,7 @@
   <button class="tab" data-tab="Lali">Lali</button>
   <button class="tab" data-tab="Matías">Matías</button>
   <button class="tab" data-tab="Sergio">Sergio</button>
+  <button class="tab" data-tab="Paloma">Paloma</button>
 </div>
 
 <main>
@@ -263,7 +264,7 @@
       <input type="text" id="nuevoCliente" placeholder="Nombre del cliente nuevo">
       <select id="nuevoEditor">
         <option value="">Sin asignar</option>
-        <option>Lali</option><option>Matías</option><option>Sergio</option>
+        <option>Lali</option><option>Matías</option><option>Sergio</option><option>Paloma</option>
       </select>
       <button class="primary" onclick="agregarCliente()">+ Agregar cliente</button>
     </div>
@@ -305,6 +306,7 @@
         <span><i style="background:var(--amber)"></i>Lali</span>
         <span><i style="background:#5b8fa8"></i>Matías</span>
         <span><i style="background:var(--accent-deep)"></i>Sergio</span>
+        <span><i style="background:var(--sage)"></i>Paloma</span>
         <span><i style="background:var(--ink-mute)"></i>Sin asignar</span>
       </div>
     </div>
@@ -319,6 +321,7 @@
   <section class="panel" id="panel-editor-Lali"></section>
   <section class="panel" id="panel-editor-Matías"></section>
   <section class="panel" id="panel-editor-Sergio"></section>
+  <section class="panel" id="panel-editor-Paloma"></section>
 
 </main>
 
@@ -352,7 +355,7 @@
 <script>
 /* ---------------- datos base ---------------- */
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const EDITORES = ["Lali","Matías","Sergio"];
+const EDITORES = ["Lali","Matías","Sergio","Paloma"];
 const TIPOS = ["Reel","Carrusel","Post","Historia","Video"];
 
 const CLIENTES_INICIALES = [
@@ -589,6 +592,7 @@ function colorEditor(editor){
   if(editor==="Lali") return "var(--amber)";
   if(editor==="Matías") return "#5b8fa8";
   if(editor==="Sergio") return "var(--accent-deep)";
+  if(editor==="Paloma") return "var(--sage)";
   return "var(--ink-mute)";
 }
 function renderCalendario(){
@@ -664,6 +668,7 @@ function renderTicker(){
     <div class="tick"><span class="num" style="color:var(--amber)">${totalEditor("Lali")}</span><span class="lbl">Piezas — Lali</span></div>
     <div class="tick"><span class="num" style="color:#5b8fa8">${totalEditor("Matías")}</span><span class="lbl">Piezas — Matías</span></div>
     <div class="tick"><span class="num" style="color:var(--accent-deep)">${totalEditor("Sergio")}</span><span class="lbl">Piezas — Sergio</span></div>
+    <div class="tick"><span class="num" style="color:var(--sage)">${totalEditor("Paloma")}</span><span class="lbl">Piezas — Paloma</span></div>
   `;
 }
 

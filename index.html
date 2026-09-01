@@ -343,7 +343,8 @@
 
 <footer>
   Mesa de Contenido — <span id="syncStatus" class="mono">conectando…</span>
-  &nbsp;·&nbsp; <button class="ghost" onclick="exportarJSON()">Exportar copia (.json)</button>
+  &nbsp;·&nbsp; <button class="ghost" onclick="actualizarAhora()">🔄 Actualizar ahora</button>
+  <button class="ghost" onclick="exportarJSON()">Exportar copia (.json)</button>
   <button class="ghost" onclick="document.getElementById('importFile').click()">Importar copia</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarJSON(event)">
 </footer>
@@ -373,9 +374,9 @@ function estadoClass(estado){
 /* ---------------- storage: Cloudflare Worker (KV) + respaldo local ---------------- */
 const KEY = "mesa_contenido_v1";
 
-// completá esto después de desplegar el Worker (paso a paso más abajo):
-const API_URL = "https://REEMPLAZAR.workers.dev";       // URL del Worker
-const AUTH_TOKEN = "cambiar-esto-por-una-clave-propia"; // igual que en worker.js
+// Worker desplegado en Cloudflare (KV: agenda_icondigital):
+const API_URL = "https://mesa-contenido.sergio-visgarra.workers.dev"; // URL del Worker
+const AUTH_TOKEN = "bflTw_yeL56TSywBPRxTNg9T4o6L3ExN";                 // igual que en worker.js
 
 function estadoInicial(){
   return {
@@ -721,6 +722,37 @@ function importarJSON(ev){
   };
   reader.readAsText(file);
 }
+
+/* ---------------- actualización manual + automática ---------------- */
+async function actualizarAhora(mostrarEstado=true){
+  try{
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const remoto = await res.json();
+    if(remoto){
+      const huboCambios = JSON.stringify(remoto) !== JSON.stringify(DB);
+      DB = remoto;
+      localStorage.setItem(KEY, JSON.stringify(DB));
+      renderAll();
+      if(mostrarEstado) setEstadoSync(huboCambios ? "actualizado ✓ (había cambios nuevos)" : "sincronizado ✓ (sin cambios nuevos)");
+    } else if(mostrarEstado){
+      setEstadoSync("sincronizado ✓");
+    }
+  }catch(e){
+    if(mostrarEstado) setEstadoSync("sin conexión — no se pudo actualizar");
+  }
+}
+// revisa cambios cada 20s mientras la pestaña está visible, para que el
+// equipo vea lo de los demás sin tener que recargar a mano. Se salta el
+// ciclo si estás escribiendo algo o con el modal de edición abierto, para
+// no pisarte lo que estás tipeando.
+setInterval(()=>{
+  const activo = document.activeElement;
+  const editandoCampo = activo && ["INPUT","SELECT","TEXTAREA"].includes(activo.tagName);
+  const modalAbierto = document.getElementById("modalEditar").classList.contains("show");
+  if(document.visibilityState==="visible" && DB && !editandoCampo && !modalAbierto){
+    actualizarAhora(false);
+  }
+}, 20000);
 
 /* ---------------- render all ---------------- */
 function renderAll(){
